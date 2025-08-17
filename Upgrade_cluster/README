@@ -1,0 +1,83 @@
+
+#Kiem tra truoc khi thuc hien
+sudo apt update
+apt-cache policy kubeadm | head
+kubectl version --output yaml
+kubectl get nodes
+
+#cap nhat software moi tren repo
+sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+#Thuc hien update Kubeadm
+sudo apt-mark unhold kubeadm
+sudo apt-get update
+sudo apt-get install -y kubeadm=1.31.0-1.1
+sudo apt-mark hold kubeadm
+
+#Co lap node CP khoi dich vu
+kubectl drain cp1 --ignore-daemonsets
+
+#Thuc hien Update kubeadm
+sudo kubeadm upgrade plan v1.31.0
+sudo kubeadm config images pull
+sudo kubeadm upgrade apply v1.31.0
+
+#Dua node tro lai dịch vụ
+kubectl uncordon cp1
+kubectl get nodes
+
+#Cap nhat kubelet, kubectl
+sudo apt-mark unhold kubelet kubectl 
+sudo apt-get update
+sudo apt-get install -y kubelet=1.31.0-1.1 kubectl=1.31.0-1.1
+sudo apt-mark hold kubelet kubectl
+
+#Restart kubelet sau khi update
+sudo systemctl restart kubelet
+kubectl version -oyaml
+kubectl get nodes
+
+
+#########################
+###Upgrade node #########
+#########################
+#set zone/region
+gcloud config set compute/region asia-southeast1
+gcloud config set compute/zone asia-southeast1-c
+
+#Kiem tra truoc
+kubectl get node
+
+#Tren CP thuc hien drain node truoc khi update
+kubectl drain node2 --ignore-daemonsets
+
+#SSH vao node
+gcloud compute ssh node2
+
+#Cap nhat repo cho ban sw moi
+sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+#Thuc hien update Kubeadm
+sudo apt-mark unhold kubeadm 
+sudo apt-get update
+sudo apt-get install -y kubeadm=1.31.0-1.1
+sudo apt-mark hold kubeadm
+sudo kubeadm upgrade node
+
+#Thuc hien update kubelet, kubectl
+sudo apt-mark unhold kubelet kubectl 
+sudo apt-get update
+sudo apt-get install -y kubelet=1.31.0-1.1 kubectl=1.31.0-1.1
+sudo apt-mark hold kubelet kubectl
+
+#Thuc hien restart kubelet sau update 
+sudo systemctl restart kubelet
+
+#Tren CP thuc hien uncordon node sau khi update
+kubectl get node
+kubectl drain node2 --ignore-
+kubectl get node
